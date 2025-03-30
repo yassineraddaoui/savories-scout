@@ -1,11 +1,11 @@
-
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import Navbar from '@/components/Navbar';
 import StarRating from '@/components/StarRating';
 import ReviewCard from '@/components/ReviewCard';
 import ReviewForm from '@/components/ReviewForm';
-import { getRestaurantById, getReviewsByRestaurantId } from '@/lib/data';
+import { fetchRestaurantById, fetchReviewsByRestaurantId } from '@/lib/api';
 import { useToast } from "@/components/ui/use-toast";
 import { Button } from "@/components/ui/button";
 import { 
@@ -16,7 +16,8 @@ import {
   FileEdit, 
   ArrowLeft,
   Heart,
-  Share2
+  Share2,
+  Loader
 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
@@ -25,41 +26,37 @@ const RestaurantDetail = () => {
   const [activeTab, setActiveTab] = useState("overview");
   const { toast } = useToast();
   
-  const restaurant = id ? getRestaurantById(id) : undefined;
-  const reviews = id ? getReviewsByRestaurantId(id) : [];
+  const { 
+    data: restaurant, 
+    isLoading: isLoadingRestaurant, 
+    isError: isRestaurantError 
+  } = useQuery({
+    queryKey: ['restaurant', id],
+    queryFn: () => id ? fetchRestaurantById(id) : Promise.reject('No restaurant ID provided'),
+    enabled: !!id
+  });
   
-  useEffect(() => {
-    window.scrollTo(0, 0);
-  }, []);
+  const { 
+    data: reviews = [], 
+    isLoading: isLoadingReviews 
+  } = useQuery({
+    queryKey: ['reviews', id],
+    queryFn: () => id ? fetchReviewsByRestaurantId(id) : Promise.reject('No restaurant ID provided'),
+    enabled: !!id
+  });
   
-  if (!restaurant) {
-    return (
-      <div>
-        <Navbar />
-        <div className="container px-4 py-16 text-center">
-          <h1 className="text-2xl font-bold mb-4">Restaurant not found</h1>
-          <Link to="/">
-            <Button className="bg-food-500 hover:bg-food-600">
-              Back to Home
-            </Button>
-          </Link>
-        </div>
-      </div>
-    );
-  }
-
   const handleBookmark = () => {
     toast({
       title: "Restaurant Saved",
-      description: `${restaurant.name} has been added to your favorites`,
+      description: `${restaurant?.name} has been added to your favorites`,
     });
   };
   
   const handleShare = () => {
     if (navigator.share) {
       navigator.share({
-        title: restaurant.name,
-        text: `Check out ${restaurant.name} on Savories Scout!`,
+        title: restaurant?.name,
+        text: `Check out ${restaurant?.name} on Savories Scout!`,
         url: window.location.href,
       });
     } else {
@@ -88,11 +85,41 @@ const RestaurantDetail = () => {
     }
   };
 
+  if (isLoadingRestaurant) {
+    return (
+      <div>
+        <Navbar />
+        <div className="container px-4 py-16 text-center">
+          <Loader className="h-8 w-8 animate-spin mx-auto mb-4 text-food-500" />
+          <h1 className="text-2xl font-bold">Loading restaurant details...</h1>
+        </div>
+      </div>
+    );
+  }
+
+  if (isRestaurantError || !restaurant) {
+    return (
+      <div>
+        <Navbar />
+        <div className="container px-4 py-16 text-center">
+          <h1 className="text-2xl font-bold mb-4">Restaurant not found</h1>
+          <p className="text-gray-600 mb-6">
+            The restaurant you're looking for couldn't be found or there was an error loading the data.
+          </p>
+          <Link to="/">
+            <Button className="bg-food-500 hover:bg-food-600">
+              Back to Home
+            </Button>
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
       
-      {/* Hero Image */}
       <div className="relative w-full h-64 md:h-80 lg:h-96 overflow-hidden">
         <div className="absolute inset-0 bg-black/20 z-10" />
         <img 
@@ -147,11 +174,9 @@ const RestaurantDetail = () => {
         </div>
       </div>
       
-      {/* Main Content */}
       <div className="container px-4 py-6">
         <div className="flex flex-col md:flex-row gap-8">
           <div className="flex-grow">
-            {/* Basic Info */}
             <div className="bg-white p-6 rounded-lg shadow-sm mb-6">
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4">
                 <div className="flex items-center mb-2 sm:mb-0">
@@ -197,7 +222,6 @@ const RestaurantDetail = () => {
               </div>
             </div>
             
-            {/* Tabs */}
             <Tabs defaultValue="overview" onValueChange={setActiveTab} className="mb-6">
               <TabsList className="grid grid-cols-3">
                 <TabsTrigger value="overview">Overview</TabsTrigger>
@@ -233,7 +257,6 @@ const RestaurantDetail = () => {
                   </div>
                 </div>
                 
-                {/* Preview of reviews */}
                 <div className="bg-white p-6 rounded-lg shadow-sm mb-6">
                   <div className="flex justify-between items-center mb-4">
                     <h2 className="text-xl font-semibold">Reviews</h2>
@@ -246,9 +269,30 @@ const RestaurantDetail = () => {
                     </Button>
                   </div>
                   
-                  {reviews.slice(0, 2).map((review) => (
-                    <ReviewCard key={review.id} review={review} />
-                  ))}
+                  {isLoadingReviews ? (
+                    <div className="space-y-4">
+                      {[...Array(2)].map((_, index) => (
+                        <div key={index} className="bg-gray-50 p-4 rounded-md animate-pulse">
+                          <div className="flex items-center mb-3">
+                            <div className="w-10 h-10 bg-gray-200 rounded-full mr-3"></div>
+                            <div className="flex-1">
+                              <div className="h-4 bg-gray-200 rounded w-1/3 mb-2"></div>
+                              <div className="h-3 bg-gray-200 rounded w-1/4"></div>
+                            </div>
+                          </div>
+                          <div className="h-4 bg-gray-200 rounded w-full mb-2"></div>
+                          <div className="h-4 bg-gray-200 rounded w-full mb-2"></div>
+                          <div className="h-4 bg-gray-200 rounded w-2/3"></div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : reviews.length > 0 ? (
+                    reviews.slice(0, 2).map((review) => (
+                      <ReviewCard key={review.id} review={review} />
+                    ))
+                  ) : (
+                    <p className="text-gray-500">No reviews yet. Be the first to write one!</p>
+                  )}
                   
                   <Button 
                     className="w-full mt-4 bg-food-500 hover:bg-food-600"
@@ -287,9 +331,30 @@ const RestaurantDetail = () => {
                   <ReviewForm restaurantId={restaurant.id} />
                   
                   <div className="mt-8">
-                    {reviews.map((review) => (
-                      <ReviewCard key={review.id} review={review} />
-                    ))}
+                    {isLoadingReviews ? (
+                      <div className="space-y-4">
+                        {[...Array(3)].map((_, index) => (
+                          <div key={index} className="bg-gray-50 p-4 rounded-md animate-pulse">
+                            <div className="flex items-center mb-3">
+                              <div className="w-10 h-10 bg-gray-200 rounded-full mr-3"></div>
+                              <div className="flex-1">
+                                <div className="h-4 bg-gray-200 rounded w-1/3 mb-2"></div>
+                                <div className="h-3 bg-gray-200 rounded w-1/4"></div>
+                              </div>
+                            </div>
+                            <div className="h-4 bg-gray-200 rounded w-full mb-2"></div>
+                            <div className="h-4 bg-gray-200 rounded w-full mb-2"></div>
+                            <div className="h-4 bg-gray-200 rounded w-2/3"></div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : reviews.length > 0 ? (
+                      reviews.map((review) => (
+                        <ReviewCard key={review.id} review={review} />
+                      ))
+                    ) : (
+                      <p className="text-gray-500">No reviews yet. Be the first to write one!</p>
+                    )}
                   </div>
                 </div>
               </TabsContent>
@@ -321,7 +386,6 @@ const RestaurantDetail = () => {
             </Tabs>
           </div>
           
-          {/* Sidebar */}
           <div className="w-full md:w-80 shrink-0">
             <div className="sticky top-4">
               <div className="bg-white p-6 rounded-lg shadow-sm mb-6">
@@ -361,7 +425,6 @@ const RestaurantDetail = () => {
         </div>
       </div>
       
-      {/* Footer */}
       <footer className="bg-gray-900 text-white py-12 mt-auto">
         <div className="container px-4">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">

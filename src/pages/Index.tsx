@@ -1,22 +1,28 @@
 
 import React, { useState, useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import Navbar from '@/components/Navbar';
 import SearchBar from '@/components/SearchBar';
 import RestaurantCard from '@/components/RestaurantCard';
 import FilterSection from '@/components/FilterSection';
 import { Restaurant, PriceRange, Cuisine, Feature, Neighborhood } from '@/lib/types';
-import { restaurants, getCuisines, getNeighborhoods, getFeatures } from '@/lib/data';
 import { Button } from "@/components/ui/button";
-import { MapPin, Search, ArrowRight, Star, Filter } from 'lucide-react';
+import { MapPin, Search, Filter, Star } from 'lucide-react';
 import { 
   Sheet, 
   SheetContent, 
   SheetTrigger, 
   SheetClose 
 } from "@/components/ui/sheet";
+import { 
+  fetchRestaurants, 
+  fetchCuisines, 
+  fetchNeighborhoods, 
+  fetchFeatures 
+} from '@/lib/api';
+import { useToast } from "@/components/ui/use-toast";
 
 const Index = () => {
-  const [filteredRestaurants, setFilteredRestaurants] = useState<Restaurant[]>(restaurants);
   const [searchQuery, setSearchQuery] = useState('');
   const [searchLocation, setSearchLocation] = useState('');
   
@@ -24,81 +30,91 @@ const Index = () => {
   const [selectedNeighborhoods, setSelectedNeighborhoods] = useState<Neighborhood[]>([]);
   const [selectedFeatures, setSelectedFeatures] = useState<Feature[]>([]);
   const [selectedPriceRanges, setSelectedPriceRanges] = useState<PriceRange[]>([]);
-  
-  const cuisines = getCuisines();
-  const neighborhoods = getNeighborhoods();
-  const features = getFeatures();
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize] = useState(12);
 
-  // Filter function
-  useEffect(() => {
-    let results = [...restaurants];
-    
-    // Filter by search query
-    if (searchQuery.trim()) {
-      const query = searchQuery.toLowerCase();
-      results = results.filter(
-        restaurant => 
-          restaurant.name.toLowerCase().includes(query) ||
-          restaurant.cuisine.toLowerCase().includes(query) ||
-          restaurant.description.toLowerCase().includes(query)
-      );
-    }
-    
-    // Filter by location
-    if (searchLocation.trim()) {
-      const location = searchLocation.toLowerCase();
-      results = results.filter(
-        restaurant => 
-          restaurant.neighborhood.toLowerCase().includes(location) ||
-          restaurant.city.toLowerCase().includes(location) ||
-          restaurant.address.toLowerCase().includes(location)
-      );
-    }
-    
-    // Filter by cuisine
-    if (selectedCuisines.length > 0) {
-      results = results.filter(restaurant => 
-        selectedCuisines.includes(restaurant.cuisine)
-      );
-    }
-    
-    // Filter by neighborhood
-    if (selectedNeighborhoods.length > 0) {
-      results = results.filter(restaurant => 
-        selectedNeighborhoods.includes(restaurant.neighborhood)
-      );
-    }
-    
-    // Filter by features
-    if (selectedFeatures.length > 0) {
-      results = results.filter(restaurant => 
-        selectedFeatures.every(feature => 
-          restaurant.features.includes(feature)
-        )
-      );
-    }
-    
-    // Filter by price range
-    if (selectedPriceRanges.length > 0) {
-      results = results.filter(restaurant => 
-        selectedPriceRanges.includes(restaurant.priceRange)
-      );
-    }
-    
-    setFilteredRestaurants(results);
-  }, [searchQuery, searchLocation, selectedCuisines, selectedNeighborhoods, selectedFeatures, selectedPriceRanges]);
+  const { toast } = useToast();
 
+  // Fetch restaurants with filters
+  const {
+    data: restaurantsData,
+    isLoading: isLoadingRestaurants,
+    isError: isRestaurantsError,
+    refetch: refetchRestaurants
+  } = useQuery({
+    queryKey: ['restaurants', searchQuery, searchLocation, selectedCuisines, selectedNeighborhoods, selectedFeatures, selectedPriceRanges, currentPage, pageSize],
+    queryFn: async () => {
+      // Build filter parameters based on the selected filters
+      const filters: any = {
+        page: currentPage,
+        size: pageSize,
+        sort: 'DESC',
+        sortCriteria: 'rating',
+      };
+      
+      if (searchQuery) {
+        filters.address = searchQuery; // Using address field for general search
+      }
+      
+      if (selectedCuisines.length > 0) {
+        filters.cuisineType = selectedCuisines[0]; // API only supports one cuisine type at a time
+      }
+      
+      if (selectedNeighborhoods.length > 0 && searchLocation === '') {
+        // If neighborhood is selected but no specific location is provided
+        filters.address = selectedNeighborhoods.join(',');
+      }
+
+      if (searchLocation) {
+        filters.address = searchLocation;
+      }
+      
+      // For minRating, we can use the lowest rating selected if user was filtering by rating
+      if (selectedPriceRanges.length > 0) {
+        // Converting price range to a format usable by the API
+        // This is an approximation since your API doesn't directly filter by price range
+        // You may need to adjust this based on your actual API implementation
+      }
+      
+      return fetchRestaurants(filters);
+    },
+    refetchOnWindowFocus: false
+  });
+
+  // Fetch filter options
+  const { data: cuisines = [] } = useQuery({
+    queryKey: ['cuisines'],
+    queryFn: fetchCuisines,
+    refetchOnWindowFocus: false
+  });
+
+  const { data: neighborhoods = [] } = useQuery({
+    queryKey: ['neighborhoods'],
+    queryFn: fetchNeighborhoods,
+    refetchOnWindowFocus: false
+  });
+
+  const { data: features = [] } = useQuery({
+    queryKey: ['features'],
+    queryFn: fetchFeatures,
+    refetchOnWindowFocus: false
+  });
+
+  // Handle search
   const handleSearch = (query: string, location: string) => {
     setSearchQuery(query);
     setSearchLocation(location);
+    setCurrentPage(1); // Reset to first page when search changes
   };
   
+  // Filter handlers
   const handleCuisineChange = (cuisine: Cuisine) => {
     setSelectedCuisines(prev => 
       prev.includes(cuisine)
         ? prev.filter(c => c !== cuisine)
         : [...prev, cuisine]
     );
+    setCurrentPage(1);
   };
   
   const handleNeighborhoodChange = (neighborhood: Neighborhood) => {
@@ -107,6 +123,7 @@ const Index = () => {
         ? prev.filter(n => n !== neighborhood)
         : [...prev, neighborhood]
     );
+    setCurrentPage(1);
   };
   
   const handleFeatureChange = (feature: Feature) => {
@@ -115,6 +132,7 @@ const Index = () => {
         ? prev.filter(f => f !== feature)
         : [...prev, feature]
     );
+    setCurrentPage(1);
   };
   
   const handlePriceRangeChange = (priceRange: PriceRange) => {
@@ -123,6 +141,17 @@ const Index = () => {
         ? prev.filter(p => p !== priceRange)
         : [...prev, priceRange]
     );
+    setCurrentPage(1);
+  };
+
+  const handleClearFilters = () => {
+    setSearchQuery('');
+    setSearchLocation('');
+    setSelectedCuisines([]);
+    setSelectedNeighborhoods([]);
+    setSelectedFeatures([]);
+    setSelectedPriceRanges([]);
+    setCurrentPage(1);
   };
 
   return (
@@ -144,38 +173,21 @@ const Index = () => {
               <SearchBar onSearch={handleSearch} />
               
               <div className="mt-4 flex flex-wrap gap-2 justify-center">
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  className="flex items-center gap-1 text-gray-600"
-                  onClick={() => handleCuisineChange('Italian')}
-                >
-                  Italian
-                </Button>
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  className="flex items-center gap-1 text-gray-600"
-                  onClick={() => handleCuisineChange('Japanese')}
-                >
-                  Japanese
-                </Button>
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  className="flex items-center gap-1 text-gray-600"
-                  onClick={() => handleCuisineChange('Mexican')}
-                >
-                  Mexican
-                </Button>
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  className="flex items-center gap-1 text-gray-600"
-                  onClick={() => handleCuisineChange('American')}
-                >
-                  American
-                </Button>
+                {cuisines.slice(0, 4).map((cuisine) => (
+                  <Button 
+                    key={cuisine}
+                    variant="outline" 
+                    size="sm" 
+                    className={`flex items-center gap-1 ${
+                      selectedCuisines.includes(cuisine) 
+                        ? 'bg-food-100 text-food-700 border-food-300' 
+                        : 'text-gray-600'
+                    }`}
+                    onClick={() => handleCuisineChange(cuisine)}
+                  >
+                    {cuisine}
+                  </Button>
+                ))}
               </div>
             </div>
           </div>
@@ -243,7 +255,9 @@ const Index = () => {
             <div className="flex-grow">
               <div className="flex justify-between items-center mb-6">
                 <h2 className="text-2xl font-semibold text-gray-900">
-                  {filteredRestaurants.length} {filteredRestaurants.length === 1 ? 'Restaurant' : 'Restaurants'}
+                  {isLoadingRestaurants 
+                    ? 'Loading restaurants...' 
+                    : `${restaurantsData?.length || 0} ${restaurantsData?.length === 1 ? 'Restaurant' : 'Restaurants'}`}
                 </h2>
                 
                 <div className="flex gap-2">
@@ -251,9 +265,34 @@ const Index = () => {
                 </div>
               </div>
               
-              {filteredRestaurants.length > 0 ? (
+              {isLoadingRestaurants ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {filteredRestaurants.map((restaurant) => (
+                  {[...Array(6)].map((_, index) => (
+                    <div key={index} className="bg-white rounded-lg shadow-sm p-4 h-64 animate-pulse">
+                      <div className="bg-gray-200 h-32 rounded-md mb-4"></div>
+                      <div className="bg-gray-200 h-4 rounded-md mb-2 w-3/4"></div>
+                      <div className="bg-gray-200 h-4 rounded-md mb-2 w-1/2"></div>
+                      <div className="bg-gray-200 h-4 rounded-md w-1/3"></div>
+                    </div>
+                  ))}
+                </div>
+              ) : isRestaurantsError ? (
+                <div className="text-center py-12 bg-white rounded-lg shadow-sm">
+                  <Search className="h-12 w-12 mx-auto text-gray-400 mb-3" />
+                  <h3 className="text-xl font-semibold mb-2">Error loading restaurants</h3>
+                  <p className="text-gray-500 mb-6">
+                    There was an error fetching restaurant data. Please try again.
+                  </p>
+                  <Button 
+                    variant="outline" 
+                    onClick={() => refetchRestaurants()}
+                  >
+                    Try again
+                  </Button>
+                </div>
+              ) : restaurantsData && restaurantsData.length > 0 ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {restaurantsData.map((restaurant) => (
                     <RestaurantCard 
                       key={restaurant.id} 
                       restaurant={restaurant} 
@@ -269,14 +308,7 @@ const Index = () => {
                   </p>
                   <Button 
                     variant="outline" 
-                    onClick={() => {
-                      setSearchQuery('');
-                      setSearchLocation('');
-                      setSelectedCuisines([]);
-                      setSelectedNeighborhoods([]);
-                      setSelectedFeatures([]);
-                      setSelectedPriceRanges([]);
-                    }}
+                    onClick={handleClearFilters}
                   >
                     Clear all filters
                   </Button>
