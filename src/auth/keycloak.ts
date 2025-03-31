@@ -1,16 +1,14 @@
-
 // Keycloak authentication service
-import { toast } from "@/components/ui/use-toast";
+import {toast} from "@/components/ui/use-toast";
 
 // Replace these values with your actual Keycloak configuration
-const KEYCLOAK_URL = "http://localhost:8080/auth";
-const KEYCLOAK_REALM = "your-realm";
-const KEYCLOAK_CLIENT_ID = "your-client-id";
-
+const KEYCLOAK_URL = "http://localhost:9090";
+const KEYCLOAK_REALM = "restaurant-review";
+const KEYCLOAK_CLIENT_ID = "restaurant-review";
+const CLIENT_SECRET = "SVhY7A7ctZpwP0FBom8DyUsl0DM17Q1h";
 interface KeycloakToken {
   token: string;
   refreshToken: string;
-  idToken: string;
   expiresAt: number;
 }
 
@@ -32,7 +30,7 @@ const storeToken = (token: KeycloakToken) => {
 const getStoredToken = (): KeycloakToken | null => {
   const storedToken = localStorage.getItem('keycloak_token');
   if (!storedToken) return null;
-  
+
   try {
     return JSON.parse(storedToken);
   } catch (e) {
@@ -52,22 +50,33 @@ const isTokenExpired = (token: KeycloakToken): boolean => {
 };
 
 // Parse user info from token
-const parseUserInfo = (idToken: string): KeycloakUser | null => {
+const parseUserInfo = (token: string | undefined): KeycloakUser | null => {
+  if (!token || typeof token !== 'string') {
+    console.error('Invalid or missing idToken:', token);
+    return null;
+  }
+
   try {
-    const base64Url = idToken.split('.')[1];
+    const parts = token.split('.');
+    if (parts.length !== 3) {
+      console.error('Invalid JWT format - expected 3 parts:', token);
+      return null;
+    }
+
+    const base64Url = parts[1];
     const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
     const jsonPayload = decodeURIComponent(
-      atob(base64)
-        .split('')
-        .map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
-        .join('')
+        atob(base64)
+            .split('')
+            .map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+            .join('')
     );
-    
+
     const payload = JSON.parse(jsonPayload);
-    
+
     return {
       id: payload.sub,
-      username: payload.preferred_username || payload.email,
+      username: payload.name || payload.email,
       email: payload.email,
       firstName: payload.given_name,
       lastName: payload.family_name,
@@ -78,7 +87,6 @@ const parseUserInfo = (idToken: string): KeycloakUser | null => {
     return null;
   }
 };
-
 // Login function
 export const login = async (username: string, password: string): Promise<KeycloakUser | null> => {
   try {
@@ -88,10 +96,11 @@ export const login = async (username: string, password: string): Promise<Keycloa
         'Content-Type': 'application/x-www-form-urlencoded',
       },
       body: new URLSearchParams({
-        client_id: KEYCLOAK_CLIENT_ID,
+        client_id: 'restaurant-review',
         grant_type: 'password',
+        client_secret:CLIENT_SECRET,
         username,
-        password,
+        password
       }),
     });
 
@@ -101,18 +110,16 @@ export const login = async (username: string, password: string): Promise<Keycloa
     }
 
     const data = await response.json();
-    
+
     const tokenData: KeycloakToken = {
       token: data.access_token,
       refreshToken: data.refresh_token,
-      idToken: data.id_token,
       expiresAt: Date.now() + data.expires_in * 1000,
     };
 
     storeToken(tokenData);
-    
-    const userInfo = parseUserInfo(data.id_token);
-    return userInfo;
+
+    return parseUserInfo(data.access_token);
   } catch (error) {
     console.error('Login error:', error);
     toast({
@@ -127,9 +134,9 @@ export const login = async (username: string, password: string): Promise<Keycloa
 // Register function (redirects to Keycloak registration page)
 export const register = () => {
   const redirectUri = encodeURIComponent(window.location.origin);
-  window.location.href = `${KEYCLOAK_URL}/realms/${KEYCLOAK_REALM}/protocol/openid-connect/auth?client_id=${KEYCLOAK_CLIENT_ID}&redirect_uri=${redirectUri}&response_type=code&scope=openid`;
+  // Use 'registrations' instead of 'auth'
+  window.location.href = `${KEYCLOAK_URL}/realms/${KEYCLOAK_REALM}/protocol/openid-connect/registrations?client_id=${KEYCLOAK_CLIENT_ID}&redirect_uri=${redirectUri}&response_type=code&scope=openid`;
 };
-
 // Logout function
 export const logout = async (): Promise<boolean> => {
   try {
@@ -163,8 +170,8 @@ export const getCurrentUser = (): KeycloakUser | null => {
     removeToken();
     return null;
   }
-  
-  return parseUserInfo(token.idToken);
+
+  return parseUserInfo(token.token);
 };
 
 // Check if user is authenticated
@@ -197,11 +204,10 @@ export const refreshToken = async (): Promise<boolean> => {
     }
 
     const data = await response.json();
-    
+
     const newToken: KeycloakToken = {
       token: data.access_token,
       refreshToken: data.refresh_token,
-      idToken: data.id_token,
       expiresAt: Date.now() + data.expires_in * 1000,
     };
 
@@ -220,7 +226,7 @@ export const getAuthHeader = (): Record<string, string> => {
   if (!token || isTokenExpired(token)) {
     return {};
   }
-  
+
   return {
     Authorization: `Bearer ${token.token}`
   };

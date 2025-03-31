@@ -96,7 +96,7 @@ const Navbar = () => {
                   <DialogContent className="sm:max-w-[425px]">
                     <DialogTitle>Sign In</DialogTitle>
                     <DialogClose className="hidden" id="sign-in-dialog-close" />
-                    <SignInForm 
+                    <SignInForm
                       onSuccess={() => {
                         document.getElementById('sign-in-dialog-close')?.click();
                       }}

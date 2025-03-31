@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useAuth } from '@/auth/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -20,7 +19,7 @@ const SignInForm: React.FC<SignInFormProps> = ({ onSuccess, onCancel }) => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!username || !password) {
       toast({
         title: "Validation Error",
@@ -29,78 +28,82 @@ const SignInForm: React.FC<SignInFormProps> = ({ onSuccess, onCancel }) => {
       });
       return;
     }
-    
+
     setIsSubmitting(true);
-    
+
     try {
-      const success = await login(username, password);
-      
-      if (success) {
+      // login() should return the user object on success or null on failure
+      const user = await login(username, password);
+
+      if (user) {
         toast({
           title: "Success",
           description: "You have been signed in successfully",
         });
         onSuccess?.();
       }
+    } catch (error) {
+      // Errors are already handled in the login function, but we add this for safety
+      console.error("Login error:", error);
     } finally {
       setIsSubmitting(false);
     }
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="space-y-2">
-        <Label htmlFor="username">Username</Label>
-        <Input
-          id="username"
-          type="text"
-          value={username}
-          onChange={(e) => setUsername(e.target.value)}
-          placeholder="Enter your username or email"
-          disabled={isSubmitting}
-        />
-      </div>
-      
-      <div className="space-y-2">
-        <Label htmlFor="password">Password</Label>
-        <Input
-          id="password"
-          type="password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          placeholder="Enter your password"
-          disabled={isSubmitting}
-        />
-      </div>
-      
-      <div className="flex gap-2 justify-end pt-2">
-        {onCancel && (
-          <Button 
-            type="button" 
-            variant="outline" 
-            onClick={onCancel}
-            disabled={isSubmitting}
-          >
-            Cancel
-          </Button>
-        )}
-        
-        <Button 
-          type="submit" 
-          disabled={isSubmitting}
-          className="bg-food-500 hover:bg-food-600 text-white"
-        >
-          {isSubmitting ? (
-            <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Signing in
-            </>
-          ) : (
-            "Sign In"
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div className="space-y-2">
+          <Label htmlFor="username">Username</Label>
+          <Input
+              id="username"
+              type="text"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              placeholder="Enter your username or email"
+              disabled={isSubmitting}
+          />
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="password">Password</Label>
+          <Input
+              id="password"
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="Enter your password"
+              disabled={isSubmitting}
+          />
+        </div>
+
+        <div className="flex gap-2 justify-end pt-2">
+          {onCancel && (
+              <Button
+                  type="button"
+                  variant="outline"
+                  onClick={onCancel}
+                  disabled={isSubmitting}
+              >
+                Cancel
+              </Button>
           )}
-        </Button>
-      </div>
-    </form>
+
+          <Button
+              type="submit"
+              disabled={isSubmitting}
+              className="bg-food-500 hover:bg-food-600 text-white"
+          >
+            {isSubmitting ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Signing in
+                </>
+            ) : (
+                "Sign In"
+            )}
+          </Button>
+        </div>
+      </form>
   );
 };
 
