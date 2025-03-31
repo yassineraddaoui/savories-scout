@@ -73,7 +73,7 @@ const StarRating: React.FC<StarRatingProps> = ({
       <div className="flex">{renderStars()}</div>
       {showValue && (
         <span className={cn("font-medium text-gray-700", textSizes[size])}>
-          {rating.toFixed(1)}
+          {rating}
         </span>
       )}
     </div>

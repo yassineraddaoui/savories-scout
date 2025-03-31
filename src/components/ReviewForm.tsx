@@ -24,9 +24,9 @@ const ReviewForm: React.FC<ReviewFormProps> = ({
   const [content, setContent] = useState('');
   const { toast } = useToast();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (rating === 0) {
       toast({
         title: "Rating required",
@@ -35,7 +35,7 @@ const ReviewForm: React.FC<ReviewFormProps> = ({
       });
       return;
     }
-    
+
     if (content.trim().length < 10) {
       toast({
         title: "Review too short",
@@ -44,22 +44,48 @@ const ReviewForm: React.FC<ReviewFormProps> = ({
       });
       return;
     }
-    
-    // In a real app, we would send the review to an API
-    console.log('Submitting review:', { restaurantId, rating, title, content });
-    
-    // Reset form
-    setRating(0);
-    setTitle('');
-    setContent('');
-    
-    toast({
-      title: "Review submitted!",
-      description: "Thank you for sharing your experience",
-    });
-    
-    if (onReviewSubmit) {
-      onReviewSubmit();
+
+    const reviewData = {
+      content: content,
+      rating: rating,
+      photoIds: [], // Add any photo IDs if applicable
+    };
+
+    try {
+      // Sending review to the API
+      const response = await fetch(`http://localhost:8080/api/restaurants/${restaurantId}/reviews`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(reviewData),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to submit the review');
+      }
+
+      const data = await response.json();
+
+      // If successful, reset form and show success toast
+      setRating(0);
+      setTitle('');
+      setContent('');
+
+      toast({
+        title: "Review submitted!",
+        description: "Thank you for sharing your experience",
+      });
+
+      if (onReviewSubmit) {
+        onReviewSubmit();
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: error.message || "Something went wrong",
+        variant: "destructive"
+      });
     }
   };
 
