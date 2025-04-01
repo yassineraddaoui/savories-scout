@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { Search, Menu, LogOut, User } from 'lucide-react';
 import { 
   Sheet, 
@@ -29,9 +29,14 @@ import {
 
 const Navbar = () => {
   const { user, isLoggedIn, logout, register } = useAuth();
+  const location = useLocation();
 
   const handleLogout = async () => {
     await logout();
+  };
+
+  const isActive = (path: string) => {
+    return location.pathname === path ? "border-food-500 text-gray-900" : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300";
   };
 
   return (
@@ -46,13 +51,13 @@ const Navbar = () => {
               </Link>
             </div>
             <div className="hidden sm:ml-6 sm:flex sm:space-x-8">
-              <Link to="/" className="inline-flex items-center px-1 pt-1 border-b-2 border-food-500 text-sm font-medium">
+              <Link to="/" className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${isActive('/')}`}>
                 Home
               </Link>
-              <Link to="/" className="inline-flex items-center px-1 pt-1 border-b-2 border-transparent text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300">
+              <Link to="/browse" className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${isActive('/browse')}`}>
                 Browse
               </Link>
-              <Link to="/" className="inline-flex items-center px-1 pt-1 border-b-2 border-transparent text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300">
+              <Link to="/about" className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${isActive('/about')}`}>
                 About
               </Link>
             </div>
@@ -122,13 +127,13 @@ const Navbar = () => {
               </SheetTrigger>
               <SheetContent side="right" className="w-[250px] sm:w-[350px]">
                 <nav className="flex flex-col gap-4 mt-6">
-                  <Link to="/" className="text-lg font-medium">
+                  <Link to="/" className={`text-lg font-medium ${location.pathname === '/' ? 'text-gray-900' : 'text-gray-500 hover:text-gray-900'}`}>
                     Home
                   </Link>
-                  <Link to="/" className="text-lg font-medium text-gray-500 hover:text-gray-900">
+                  <Link to="/browse" className={`text-lg font-medium ${location.pathname === '/browse' ? 'text-gray-900' : 'text-gray-500 hover:text-gray-900'}`}>
                     Browse
                   </Link>
-                  <Link to="/" className="text-lg font-medium text-gray-500 hover:text-gray-900">
+                  <Link to="/about" className={`text-lg font-medium ${location.pathname === '/about' ? 'text-gray-900' : 'text-gray-500 hover:text-gray-900'}`}>
                     About
                   </Link>
                   <div className="flex flex-col gap-2 mt-4 pt-4 border-t">
