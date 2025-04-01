@@ -48,14 +48,24 @@ const ReviewCard: React.FC<ReviewCardProps> = ({review, className = ''}) => {
         <div className={`p-4 border-b ${className}`}>
             <div className="flex items-start gap-3">
                 <Avatar className="h-10 w-10">
-                    <AvatarImage src={review.userAvatar} alt={review.writtenBy.givenName}/>
-                    <AvatarFallback>{getInitials(review.writtenBy.familyName)}</AvatarFallback>
-                </Avatar>
+                    <AvatarImage
+                        src={review.userAvatar}
+                        alt={review.writtenBy?.givenName ?? "Anonymous"}
+                    />
+
+                    <AvatarFallback>
+                        {review.writtenBy
+                            ? getInitials(review.writtenBy.familyName)
+                            : "A"}
+                    </AvatarFallback>                </Avatar>
 
                 <div className="flex-1">
                     <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3 mb-2">
-                        <h4 className="font-medium">{review.writtenBy.familyName + " " + review.writtenBy.givenName}</h4>
-                        <div className="flex items-center text-gray-500 text-sm gap-1">
+                        <h4 className="font-medium">
+                            {review.writtenBy
+                                ? `${review.writtenBy.familyName} ${review.writtenBy.givenName}`
+                                : "Anonymous"}
+                        </h4>                        <div className="flex items-center text-gray-500 text-sm gap-1">
                             <span>{formattedDate}</span>
                         </div>
                     </div>
