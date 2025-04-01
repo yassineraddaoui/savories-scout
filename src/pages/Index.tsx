@@ -44,15 +44,12 @@ const Index = () => {
             if (searchQuery) {
                 filters.address = searchQuery; // Using address field for general search
             }
-
-            if (selectedCuisines.length > 0) {
-                filters.cuisineType = selectedCuisines[0]; // API only supports one cuisine type at a time
-            }
-
             if (selectedNeighborhoods.length > 0 && searchLocation === '') {
                     filters.address = selectedNeighborhoods.join(',');
             }
-
+            if (selectedCuisines.length > 0 ) {
+                filters.cuisineTypes = selectedCuisines.join(',');
+        }
             if (searchLocation) {
                 filters.address = searchLocation;
             }
