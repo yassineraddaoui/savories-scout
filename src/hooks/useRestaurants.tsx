@@ -1,7 +1,7 @@
 
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Restaurant, PriceRange, Cuisine, Feature, Neighborhood } from '@/lib/types';
+import { Restaurant, Cuisine, Feature, Neighborhood } from '@/lib/types';
 import { fetchRestaurants } from '@/lib/api';
 
 interface UseRestaurantsOptions {
@@ -17,7 +17,7 @@ interface UseRestaurantsFilters {
   cuisines?: Cuisine[];
   neighborhoods?: Neighborhood[];
   features?: Feature[];
-  priceRanges?: PriceRange[];
+  priceRanges?: number[];
   minRating?: number;
   latitude?: number;
   longitude?: number;

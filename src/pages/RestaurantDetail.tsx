@@ -39,7 +39,6 @@ const RestaurantDetail = () => {
         enabled: !!id
     });
 
-
     const handleBookmark = () => {
         toast({
             title: "Restaurant Saved",
@@ -65,15 +64,15 @@ const RestaurantDetail = () => {
         }
     };
 
-    const getPriceSymbol = (priceRange: string): string => {
+    const getPriceSymbol = (priceRange: number): string => {
         switch (priceRange) {
-            case 'cheap':
+            case 1:
                 return '$';
-            case 'moderate':
+            case 2:
                 return '$$';
-            case 'expensive':
+            case 3:
                 return '$$$';
-            case 'very expensive':
+            case 4:
                 return '$$$$';
             default:
                 return '$';
@@ -185,7 +184,7 @@ const RestaurantDetail = () => {
                   </span>
                                 </div>
                                 <div className="flex items-center">
-                                    <span className="text-gray-600 mr-2">{getPriceSymbol(restaurant.priceRange)}</span>
+                                    <span className="text-gray-600 mr-2">{getPriceSymbol(restaurant.rangePrice)}</span>
                                     <span className="text-gray-400">•</span>
                                     <span className="text-gray-600 ml-2">{restaurant.cuisine}</span>
                                 </div>

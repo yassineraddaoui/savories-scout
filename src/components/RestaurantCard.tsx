@@ -11,15 +11,15 @@ interface RestaurantCardProps {
   className?: string;
 }
 
-const getPriceSymbol = (priceRange: Restaurant['priceRange']): string => {
+const getPriceSymbol = (priceRange: number): string => {
   switch (priceRange) {
-    case 'cheap':
+    case 1:
       return '$';
-    case 'moderate':
+    case 2:
       return '$$';
-    case 'expensive':
+    case 3:
       return '$$$';
-    case 'very expensive':
+    case 4:
       return '$$$$';
     default:
       return '$';
@@ -41,7 +41,7 @@ const RestaurantCard: React.FC<RestaurantCardProps> = ({ restaurant, className =
             <div className="flex justify-between items-start mb-2">
               <h3 className="font-semibold text-lg truncate flex-1">{restaurant.name}</h3>
               <span className="text-gray-600 text-sm font-medium ml-2">
-              {getPriceSymbol(restaurant.priceRange)}
+              {getPriceSymbol(restaurant.rangePrice)}
             </span>
             </div>
 

@@ -1,4 +1,3 @@
-
 import {PaginatedResponse, Restaurant, Review} from "@/lib/types.ts";
 import {getAuthHeader, isAuthenticated} from "@/auth/keycloak";
 
