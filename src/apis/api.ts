@@ -1,3 +1,4 @@
+
 import {PaginatedResponse, Restaurant, Review} from "@/lib/types.ts";
 import {getAuthHeader, isAuthenticated} from "@/auth/keycloak";
 
@@ -57,11 +58,13 @@ export const getFeatures = async (): Promise<ApiResponse<string[]>> => {
 export const getUserFavorites = async (): Promise<ApiResponse<Restaurant[]>> => {
     return fetchApi<Restaurant[]>("/user/favorites");
 };
+
 export const submitReview = async (
     restaurantId: string,
     reviewData: {
         content: string,
         rating: number,
+        title?: string,
         photoIds: any[],
     }
 ): Promise<ApiResponse<Review>> => {
@@ -70,10 +73,14 @@ export const submitReview = async (
             ...getAuthHeader(),
             "Content-Type": "application/json",
         };
+        
+        // Determine the correct endpoint based on authentication status
         let reviewAddApi = `${API_BASE_URL}/restaurants/${restaurantId}/reviews`;
         if (isAuthenticated()) {
-            reviewAddApi = reviewAddApi.concat("/user")
+            reviewAddApi = `${reviewAddApi}/user`;
         }
+
+        console.log("Submitting review to:", reviewAddApi, "Data:", JSON.stringify(reviewData));
 
         const response = await fetch(reviewAddApi, {
             method: "POST",
@@ -81,13 +88,18 @@ export const submitReview = async (
             body: JSON.stringify(reviewData),
         });
 
+        console.log("Review submission response status:", response.status);
+
         if (!response.ok) {
-            return {error: `HTTP error! status: ${response.status}`};
+            const errorText = await response.text();
+            console.error("Error response:", errorText);
+            return {error: `HTTP error! status: ${response.status} - ${errorText}`};
         }
 
-        const data: Review = await response.json();
+        const data = await response.json();
         return {data};
     } catch (error) {
+        console.error("Error in submitReview:", error);
         return {error: error instanceof Error ? error.message : "Unknown error"};
     }
 };

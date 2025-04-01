@@ -1,3 +1,4 @@
+
 import React, {useState} from 'react';
 import {Review} from '@/lib/types';
 import StarRating from './StarRating';
@@ -13,12 +14,10 @@ interface ReviewCardProps {
 
 const ReviewCard: React.FC<ReviewCardProps> = ({review, className = ''}) => {
     const [isExpanded, setIsExpanded] = useState(false);
-    const [helpfulCount, setHelpfulCount] = useState(review.helpfulCount);
+    const [helpfulCount, setHelpfulCount] = useState(review.helpfulCount || 0);
     const [markedHelpful, setMarkedHelpful] = useState(false);
 
-    const toggleExpanded = () => {
-        setIsExpanded(!isExpanded);
-    };
+    const toggleExpanded = () => setIsExpanded(!isExpanded);
 
     const markHelpful = () => {
         if (!markedHelpful) {
@@ -30,9 +29,9 @@ const ReviewCard: React.FC<ReviewCardProps> = ({review, className = ''}) => {
         }
     };
 
-    const getInitials = (name: string) => {
-        if (name == null)
-            return "";
+    const getInitials = (name: string | null | undefined) => {
+        if (!name) return "A";
+        
         return name
             .split(' ')
             .map(part => part[0])
@@ -40,7 +39,12 @@ const ReviewCard: React.FC<ReviewCardProps> = ({review, className = ''}) => {
             .toUpperCase();
     };
 
-    const formattedDate = formatDistanceToNow(new Date(review.datePosted), {addSuffix: true});
+    // Format date using date-fns
+    const formattedDate = review.datePosted 
+        ? formatDistanceToNow(new Date(review.datePosted), {addSuffix: true})
+        : '';
+    
+    // Check if we need "Read more" button
     const needsReadMore = review.content.length > 200;
     const displayContent = isExpanded ? review.content : review.content.slice(0, 200);
 
@@ -52,12 +56,12 @@ const ReviewCard: React.FC<ReviewCardProps> = ({review, className = ''}) => {
                         src={review.userAvatar}
                         alt={review.writtenBy?.givenName ?? "Anonymous"}
                     />
-
                     <AvatarFallback>
                         {review.writtenBy
                             ? getInitials(review.writtenBy.familyName)
                             : "A"}
-                    </AvatarFallback>                </Avatar>
+                    </AvatarFallback>
+                </Avatar>
 
                 <div className="flex-1">
                     <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3 mb-2">
@@ -65,9 +69,12 @@ const ReviewCard: React.FC<ReviewCardProps> = ({review, className = ''}) => {
                             {review.writtenBy
                                 ? `${review.writtenBy.familyName} ${review.writtenBy.givenName}`
                                 : "Anonymous"}
-                        </h4>                        <div className="flex items-center text-gray-500 text-sm gap-1">
-                            <span>{formattedDate}</span>
-                        </div>
+                        </h4>
+                        {formattedDate && (
+                            <div className="flex items-center text-gray-500 text-sm gap-1">
+                                <span>{formattedDate}</span>
+                            </div>
+                        )}
                     </div>
 
                     <div className="mb-2">
@@ -108,6 +115,7 @@ const ReviewCard: React.FC<ReviewCardProps> = ({review, className = ''}) => {
                                     src={photo}
                                     alt={`Review photo ${index + 1}`}
                                     className="h-20 w-20 object-cover rounded"
+                                    loading="lazy"
                                 />
                             ))}
                         </div>

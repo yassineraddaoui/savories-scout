@@ -1,3 +1,4 @@
+
 import React, {useState} from 'react';
 import {Star} from 'lucide-react';
 import {Button} from "@/components/ui/button";
@@ -6,6 +7,7 @@ import {Input} from "@/components/ui/input";
 import {Label} from "@/components/ui/label";
 import {useToast} from "@/components/ui/use-toast";
 import {submitReview} from "@/apis/api.ts";
+import {useQueryClient} from "@tanstack/react-query";
 
 interface ReviewFormProps {
     restaurantId: string;
@@ -14,19 +16,21 @@ interface ReviewFormProps {
 }
 
 const ReviewForm: React.FC<ReviewFormProps> = ({
-                                                   restaurantId,
-                                                   onReviewSubmit,
-                                                   className = ''
-                                               }) => {
+    restaurantId,
+    onReviewSubmit,
+    className = ''
+}) => {
     const [rating, setRating] = useState(0);
     const [hoverRating, setHoverRating] = useState(0);
     const [title, setTitle] = useState('');
     const [content, setContent] = useState('');
+    const [isSubmitting, setIsSubmitting] = useState(false);
     const {toast} = useToast();
+    const queryClient = useQueryClient();
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-
+        
         if (rating === 0) {
             toast({
                 title: "Rating required",
@@ -45,39 +49,51 @@ const ReviewForm: React.FC<ReviewFormProps> = ({
             return;
         }
 
+        setIsSubmitting(true);
+
         const reviewData = {
             content: content,
             rating: rating,
+            title: title.trim() || undefined,
             photoIds: [], // Add any photo IDs if applicable
         };
 
         try {
             const response = await submitReview(restaurantId, reviewData);
-
-            // Sending review to the API
+            console.log("Review submission response:", response);
 
             if (!response.data) {
-                throw new Error('Failed to submit the review');
+                throw new Error(response.error || 'Failed to submit the review');
             }
-            // If successful, reset form and show success toast
+            
+            // Reset form
             setRating(0);
             setTitle('');
             setContent('');
 
+            // Show success toast
             toast({
                 title: "Review submitted!",
                 description: "Thank you for sharing your experience",
             });
 
+            // Invalidate queries to refetch latest data
+            queryClient.invalidateQueries({queryKey: ['reviews', restaurantId]});
+            queryClient.invalidateQueries({queryKey: ['restaurant', restaurantId]});
+
+            // Call the callback if provided
             if (onReviewSubmit) {
                 onReviewSubmit();
             }
         } catch (error) {
+            console.error("Error submitting review:", error);
             toast({
                 title: "Error",
                 description: error.message || "Something went wrong",
                 variant: "destructive"
             });
+        } finally {
+            setIsSubmitting(false);
         }
     };
 
@@ -142,8 +158,12 @@ const ReviewForm: React.FC<ReviewFormProps> = ({
                     />
                 </div>
 
-                <Button type="submit" className="bg-food-500 hover:bg-food-600 mt-2">
-                    Submit Review
+                <Button 
+                    type="submit" 
+                    className="bg-food-500 hover:bg-food-600 mt-2"
+                    disabled={isSubmitting}
+                >
+                    {isSubmitting ? 'Submitting...' : 'Submit Review'}
                 </Button>
             </form>
         </div>
