@@ -33,16 +33,23 @@ export interface Restaurant {
 
 export interface Review {
     id: string;
-    restaurantId: string;
-    userId: string;
-    userName: string;
     userAvatar?: string;
     rating: number;
-    title: string;
+    title?: string; // Made optional as it's missing in the JSON
     content: string;
     datePosted: string;
+    lastEdited?: string; // Added last edited timestamp
     photos?: string[];
-    helpfulCount: number;
+    helpfulCount?: number;
+    writtenBy: User; // Linked User interface
+}
+
+export interface User {
+    id: string;
+    username: string;
+    givenName: string;
+    familyName: string;
+    avatar?: string; // Kept optional as not present in JSON
 }
 
 export interface PaginatedResponse<T> {
