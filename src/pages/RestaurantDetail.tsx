@@ -184,7 +184,7 @@ const RestaurantDetail = () => {
                   </span>
                                 </div>
                                 <div className="flex items-center">
-                                    <span className="text-gray-600 mr-2">{getPriceSymbol(restaurant.rangePrice)}</span>
+                                    <span className="text-gray-600 mr-2">{getPriceSymbol(restaurant.priceRange)}</span>
                                     <span className="text-gray-400">•</span>
                                     <span className="text-gray-600 ml-2">{restaurant.cuisine}</span>
                                 </div>

@@ -1,145 +1,54 @@
-import React, {useState} from 'react';
-import {useQuery} from '@tanstack/react-query';
+// Index.tsx
+import React from 'react';
 import Navbar from '@/components/Navbar';
 import SearchBar from '@/components/SearchBar';
-import RestaurantCard from '@/components/RestaurantCard';
-import FilterSection from '@/components/FilterSection';
-import {Cuisine, Feature, Neighborhood, PriceRange, Restaurant} from '@/lib/types';
-import {Button} from "@/components/ui/button";
-import {Filter, Search} from 'lucide-react';
-import {Sheet, SheetClose, SheetContent, SheetTrigger} from "@/components/ui/sheet";
-import {fetchCuisines, fetchFeatures, fetchNeighborhoods, fetchRestaurants} from '@/lib/api';
-import {useToast} from "@/components/ui/use-toast";
+import { Button } from "@/components/ui/button";
+import { Search } from 'lucide-react';
+import { useToast } from "@/components/ui/use-toast";
+import { useRestaurants } from '@/hooks/useRestaurants';
+import { RestaurantFilters } from '@/components/RestaurantFilters';
+import { RestaurantList } from '@/components/RestaurantList';
 
 const Index = () => {
-    const [searchQuery, setSearchQuery] = useState('');
-    const [searchLocation, setSearchLocation] = useState('');
-
-    const [selectedCuisines, setSelectedCuisines] = useState<Cuisine[]>([]);
-    const [selectedNeighborhoods, setSelectedNeighborhoods] = useState<Neighborhood[]>([]);
-    const [selectedFeatures, setSelectedFeatures] = useState<Feature[]>([]);
-    const [selectedPriceRanges, setSelectedPriceRanges] = useState<PriceRange[]>([]);
-    const [currentPage, setCurrentPage] = useState(1);
-    const [pageSize] = useState(12);
-
-    const {toast} = useToast();
-
-    // Fetch restaurants with filters
+    const { toast } = useToast();
     const {
-        data: restaurantsData,
-        isLoading: isLoadingRestaurants,
-        isError: isRestaurantsError,
-        refetch: refetchRestaurants
-    } = useQuery({
-        queryKey: ['restaurants', searchQuery, searchLocation, selectedCuisines, selectedNeighborhoods, selectedFeatures, selectedPriceRanges, currentPage, pageSize],
-        queryFn: async () => {
-            // Build filter parameters based on the selected filters
-            const filters: any = {
-                page: currentPage,
-                size: pageSize,
-                sort: 'DESC',
-                sortCriteria: 'averageRating',
-            };
+        searchQuery,
+        searchLocation,
+        selectedCuisines,
+        selectedNeighborhoods,
+        selectedFeatures,
+        selectedPriceRanges,
+        currentPage,
+        cuisines,
+        neighborhoods,
+        features,
+        restaurantsData,
+        isLoadingRestaurants,
+        isRestaurantsError,
+        refetchRestaurants,
+        handleSearch,
+        handleCuisineChange,
+        handleNeighborhoodChange,
+        handleFeatureChange,
+        handlePriceRangeChange,
+        handleClearFilters,
+        handlePageChange
+    } = useRestaurants();
 
-            if (searchQuery) {
-                filters.address = searchQuery; // Using address field for general search
-            }
-            if (selectedNeighborhoods.length > 0 && searchLocation === '') {
-                    filters.address = selectedNeighborhoods.join(',');
-            }
-            if (selectedCuisines.length > 0 ) {
-                filters.cuisineTypes = selectedCuisines.join(',');
-        }
-            if (searchLocation) {
-                filters.address = searchLocation;
-            }
+    // Check if any filters are active
+    const hasActiveFilters = selectedCuisines.length > 0 ||
+        selectedNeighborhoods.length > 0 ||
+        selectedFeatures.length > 0 ||
+        selectedPriceRanges.length > 0 ||
+        searchQuery !== '' ||
+        searchLocation !== '';
 
-            if (selectedPriceRanges.length > 0) {
-                filters.priceRanges = selectedPriceRanges.join(',');
-
-            }
-
-            return fetchRestaurants(filters);
-        },
-        refetchOnWindowFocus: false
-    });
-
-    // Fetch filter options
-    const {data: cuisines = []} = useQuery({
-        queryKey: ['cuisines'],
-        queryFn: fetchCuisines,
-        refetchOnWindowFocus: false
-    });
-
-    const {data: neighborhoods = []} = useQuery({
-        queryKey: ['neighborhoods'],
-        queryFn: fetchNeighborhoods,
-        refetchOnWindowFocus: false
-    });
-
-    const {data: features = []} = useQuery({
-        queryKey: ['features'],
-        queryFn: fetchFeatures,
-        refetchOnWindowFocus: false
-    });
-
-    // Handle search
-    const handleSearch = (query: string, location: string) => {
-        setSearchQuery(query);
-        setSearchLocation(location);
-        setCurrentPage(1); // Reset to first page when search changes
-    };
-
-    // Filter handlers
-    const handleCuisineChange = (cuisine: Cuisine) => {
-        setSelectedCuisines(prev =>
-            prev.includes(cuisine)
-                ? prev.filter(c => c !== cuisine)
-                : [...prev, cuisine]
-        );
-        setCurrentPage(1);
-    };
-
-    const handleNeighborhoodChange = (neighborhood: Neighborhood) => {
-        setSelectedNeighborhoods(prev =>
-            prev.includes(neighborhood)
-                ? prev.filter(n => n !== neighborhood)
-                : [...prev, neighborhood]
-        );
-        setCurrentPage(1);
-    };
-
-    const handleFeatureChange = (feature: Feature) => {
-        setSelectedFeatures(prev =>
-            prev.includes(feature)
-                ? prev.filter(f => f !== feature)
-                : [...prev, feature]
-        );
-        setCurrentPage(1);
-    };
-
-    const handlePriceRangeChange = (priceRange: PriceRange) => {
-        setSelectedPriceRanges(prev =>
-            prev.includes(priceRange)
-                ? prev.filter(p => p !== priceRange)
-                : [...prev, priceRange]
-        );
-        setCurrentPage(1);
-    };
-
-    const handleClearFilters = () => {
-        setSearchQuery('');
-        setSearchLocation('');
-        setSelectedCuisines([]);
-        setSelectedNeighborhoods([]);
-        setSelectedFeatures([]);
-        setSelectedPriceRanges([]);
-        setCurrentPage(1);
-    };
+    const restaurants = restaurantsData?.content || [];
+    const totalPages = 1;
 
     return (
         <div className="min-h-screen flex flex-col">
-            <Navbar/>
+            <Navbar />
 
             {/* Hero Section */}
             <section className="hero-pattern py-16 md:py-24">
@@ -153,7 +62,7 @@ const Index = () => {
                         </p>
 
                         <div className="bg-white p-6 rounded-lg shadow-lg">
-                            <SearchBar onSearch={handleSearch}/>
+                            <SearchBar onSearch={handleSearch} />
 
                             <div className="mt-4 flex flex-wrap gap-2 justify-center">
                                 {cuisines.slice(0, 4).map((cuisine) => (
@@ -181,58 +90,22 @@ const Index = () => {
             <section className="py-12 bg-gray-50 flex-grow">
                 <div className="container px-4">
                     <div className="flex flex-col lg:flex-row gap-8">
-                        {/* Sidebar Filters - Desktop */}
-                        <div className="hidden lg:block w-64 shrink-0">
-                            <FilterSection
-                                cuisines={cuisines}
-                                neighborhoods={neighborhoods}
-                                features={features}
-                                selectedCuisines={selectedCuisines}
-                                selectedNeighborhoods={selectedNeighborhoods}
-                                selectedFeatures={selectedFeatures}
-                                selectedPriceRanges={selectedPriceRanges}
-                                onCuisineChange={handleCuisineChange}
-                                onNeighborhoodChange={handleNeighborhoodChange}
-                                onFeatureChange={handleFeatureChange}
-                                onPriceRangeChange={handlePriceRangeChange}
-                                className="sticky top-4"
-                            />
-                        </div>
-
-                        {/* Sidebar Filters - Mobile */}
-                        <div className="lg:hidden mb-4">
-                            <Sheet>
-                                <SheetTrigger asChild>
-                                    <Button
-                                        variant="outline"
-                                        className="w-full flex items-center justify-center gap-2"
-                                    >
-                                        <Filter className="h-4 w-4"/>
-                                        Filters
-                                    </Button>
-                                </SheetTrigger>
-                                <SheetContent side="left" className="w-[300px] sm:w-[400px] overflow-y-auto">
-                                    <FilterSection
-                                        cuisines={cuisines}
-                                        neighborhoods={neighborhoods}
-                                        features={features}
-                                        selectedCuisines={selectedCuisines}
-                                        selectedNeighborhoods={selectedNeighborhoods}
-                                        selectedFeatures={selectedFeatures}
-                                        selectedPriceRanges={selectedPriceRanges}
-                                        onCuisineChange={handleCuisineChange}
-                                        onNeighborhoodChange={handleNeighborhoodChange}
-                                        onFeatureChange={handleFeatureChange}
-                                        onPriceRangeChange={handlePriceRangeChange}
-                                    />
-                                    <SheetClose asChild>
-                                        <Button className="mt-4 w-full bg-food-500 hover:bg-food-600">
-                                            Apply Filters
-                                        </Button>
-                                    </SheetClose>
-                                </SheetContent>
-                            </Sheet>
-                        </div>
+                        {/* Filter components */}
+                        <RestaurantFilters
+                            cuisines={cuisines}
+                            neighborhoods={neighborhoods}
+                            features={features}
+                            selectedCuisines={selectedCuisines}
+                            selectedNeighborhoods={selectedNeighborhoods}
+                            selectedFeatures={selectedFeatures}
+                            selectedPriceRanges={selectedPriceRanges}
+                            onCuisineChange={handleCuisineChange}
+                            onNeighborhoodChange={handleNeighborhoodChange}
+                            onFeatureChange={handleFeatureChange}
+                            onPriceRangeChange={handlePriceRangeChange}
+                            onClearFilters={handleClearFilters}
+                            hasActiveFilters={hasActiveFilters}
+                        />
 
                         {/* Restaurant Grid */}
                         <div className="flex-grow">
@@ -240,65 +113,24 @@ const Index = () => {
                                 <h2 className="text-2xl font-semibold text-gray-900">
                                     {isLoadingRestaurants
                                         ? 'Loading restaurants...'
-                                        : `${restaurantsData?.length || 0} ${restaurantsData?.length === 1 ? 'Restaurant' : 'Restaurants'}`}
+                                        : `${restaurants.length || 0} ${restaurants.length === 1 ? 'Restaurant' : 'Restaurants'}`}
                                 </h2>
 
                                 <div className="flex gap-2">
-                                    <SearchBar variant="simple" onSearch={handleSearch}
-                                               className="hidden md:flex max-w-md"/>
+                                    <SearchBar variant="simple" onSearch={handleSearch} className="hidden md:flex max-w-md" />
                                 </div>
                             </div>
 
-                            {isLoadingRestaurants ? (
-                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                                    {[...Array(6)].map((_, index) => (
-                                        <div key={index}
-                                             className="bg-white rounded-lg shadow-sm p-4 h-64 animate-pulse">
-                                            <div className="bg-gray-200 h-32 rounded-md mb-4"></div>
-                                            <div className="bg-gray-200 h-4 rounded-md mb-2 w-3/4"></div>
-                                            <div className="bg-gray-200 h-4 rounded-md mb-2 w-1/2"></div>
-                                            <div className="bg-gray-200 h-4 rounded-md w-1/3"></div>
-                                        </div>
-                                    ))}
-                                </div>
-                            ) : isRestaurantsError ? (
-                                <div className="text-center py-12 bg-white rounded-lg shadow-sm">
-                                    <Search className="h-12 w-12 mx-auto text-gray-400 mb-3"/>
-                                    <h3 className="text-xl font-semibold mb-2">Error loading restaurants</h3>
-                                    <p className="text-gray-500 mb-6">
-                                        There was an error fetching restaurant data. Please try again.
-                                    </p>
-                                    <Button
-                                        variant="outline"
-                                        onClick={() => refetchRestaurants()}
-                                    >
-                                        Try again
-                                    </Button>
-                                </div>
-                            ) : restaurantsData && restaurantsData.length > 0 ? (
-                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                                    {restaurantsData.map((restaurant) => (
-                                        <RestaurantCard
-                                            key={restaurant.id}
-                                            restaurant={restaurant}
-                                        />
-                                    ))}
-                                </div>
-                            ) : (
-                                <div className="text-center py-12 bg-white rounded-lg shadow-sm">
-                                    <Search className="h-12 w-12 mx-auto text-gray-400 mb-3"/>
-                                    <h3 className="text-xl font-semibold mb-2">No restaurants found</h3>
-                                    <p className="text-gray-500 mb-6">
-                                        Try adjusting your filters or search criteria
-                                    </p>
-                                    <Button
-                                        variant="outline"
-                                        onClick={handleClearFilters}
-                                    >
-                                        Clear all filters
-                                    </Button>
-                                </div>
-                            )}
+                            <RestaurantList
+                                restaurants={restaurants}
+                                isLoading={isLoadingRestaurants}
+                                isError={isRestaurantsError}
+                                onRetry={refetchRestaurants}
+                                onClearFilters={handleClearFilters}
+                                currentPage={currentPage}
+                                totalPages={totalPages}
+                                onPageChange={handlePageChange}
+                            />
                         </div>
                     </div>
                 </div>
