@@ -1,65 +1,105 @@
-import React, {useState} from 'react';
-import {useQuery} from '@tanstack/react-query';
+import React, { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import Navbar from '@/components/Navbar';
 import SearchBar from '@/components/SearchBar';
 import FilterSection from '@/components/FilterSection';
 import RestaurantCard from '@/components/RestaurantCard';
-import {Alert, AlertDescription, AlertTitle} from '@/components/ui/alert';
-import {Button} from '@/components/ui/button';
-import {Skeleton} from '@/components/ui/skeleton';
-import {Filter, FilterX} from 'lucide-react';
-import {Sheet, SheetClose, SheetContent, SheetTrigger} from "@/components/ui/sheet.tsx";
-import {fetchCuisines, fetchFeatures, fetchNeighborhoods, fetchRestaurants} from "@/lib/api.ts";
-import {Cuisine, Feature, Neighborhood, PriceRange, Restaurant} from "@/lib/types.ts";
-import {useToast} from "@/hooks/use-toast.ts";
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Button } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Filter, FilterX } from 'lucide-react';
+import { Sheet, SheetClose, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { fetchCuisines, fetchFeatures, fetchNeighborhoods, fetchRestaurants } from "@/lib/api";
+import { Cuisine, Feature, Neighborhood, PriceRange, Restaurant } from "@/lib/types";
+import { useToast } from "@/hooks/use-toast";
 
 const Browse = () => {
-    const [searchQuery, setSearchQuery] = useState('');
+    const { toast } = useToast();
 
+    // Search state
+    const [searchQuery, setSearchQuery] = useState('');
+    const [searchLocation, setSearchLocation] = useState('');
+
+    // Filter states
     const [selectedCuisines, setSelectedCuisines] = useState<Cuisine[]>([]);
     const [selectedNeighborhoods, setSelectedNeighborhoods] = useState<Neighborhood[]>([]);
     const [selectedFeatures, setSelectedFeatures] = useState<Feature[]>([]);
     const [selectedPriceRanges, setSelectedPriceRanges] = useState<PriceRange[]>([]);
+
+    // Pagination state - use only one state variable for pagination
     const [currentPage, setCurrentPage] = useState(1);
     const [pageSize] = useState(12);
-    const [searchLocation, setSearchLocation] = useState('');
 
-    const {toast} = useToast();
-
-    const [page, setPage] = useState(0);
-    const [filters, setFilters] = useState({
-        cuisine: '',
-        feature: '',
-        neighborhood: '',
-        minRating: 0,
-    });
-    const {data: cuisines = []} = useQuery({
+    // Fetch filter data
+    const { data: cuisines = [] } = useQuery({
         queryKey: ['cuisines'],
         queryFn: fetchCuisines,
         refetchOnWindowFocus: false
     });
 
-    const {data: neighborhoods = []} = useQuery({
+    const { data: neighborhoods = [] } = useQuery({
         queryKey: ['neighborhoods'],
         queryFn: fetchNeighborhoods,
         refetchOnWindowFocus: false
     });
 
-    const {data: features = []} = useQuery({
+    const { data: features = [] } = useQuery({
         queryKey: ['features'],
         queryFn: fetchFeatures,
         refetchOnWindowFocus: false
     });
 
+    // Fetch restaurants with applied filters
+    const {
+        data: restaurantsData,
+        isLoading: isLoadingRestaurants,
+        isError: isRestaurantsError,
+        refetch: refetchRestaurants
+    } = useQuery({
+        queryKey: ['restaurants', searchQuery, searchLocation, selectedCuisines, selectedNeighborhoods, selectedFeatures, selectedPriceRanges, currentPage, pageSize],
+        queryFn: async () => {
+            // Build filter parameters
+            const filters: any = {
+                page: currentPage - 1, // Adjust if your API uses 0-based indexing
+                size: pageSize,
+                sort: 'DESC',
+                sortCriteria: 'averageRating',
+            };
 
-    // Handle search
+            if (searchQuery) {
+                filters.address = searchQuery;
+            }
+
+            if (selectedNeighborhoods.length > 0 && searchLocation === '') {
+                filters.address = selectedNeighborhoods.join(',');
+            }
+
+            if (selectedCuisines.length > 0) {
+                filters.cuisineTypes = selectedCuisines.join(',');
+            }
+
+            if (searchLocation) {
+                filters.address = searchLocation;
+            }
+
+            if (selectedPriceRanges.length > 0) {
+                filters.priceRanges = selectedPriceRanges.join(',');
+            }
+
+            const response = await fetchRestaurants(filters);
+            console.log('API Response:', response); // For debugging
+            return response;
+        },
+        refetchOnWindowFocus: false
+    });
+
+    // Event handlers
     const handleSearch = (query: string, location: string) => {
         setSearchQuery(query);
         setSearchLocation(location);
-        setCurrentPage(1); // Reset to first page when search changes
+        setCurrentPage(1); // Reset to first page on new search
     };
 
-    // Filter handlers
     const handleCuisineChange = (cuisine: Cuisine) => {
         setSelectedCuisines(prev =>
             prev.includes(cuisine)
@@ -95,57 +135,22 @@ const Browse = () => {
         );
         setCurrentPage(1);
     };
+
     const handleClearFilters = () => {
-        setFilters({
-            cuisine: '',
-            feature: '',
-            neighborhood: '',
-            minRating: 0,
-        });
+        setSearchQuery('');
+        setSearchLocation('');
+        setSelectedCuisines([]);
+        setSelectedNeighborhoods([]);
+        setSelectedFeatures([]);
+        setSelectedPriceRanges([]);
+        setCurrentPage(1);
     };
 
     const handlePageChange = (newPage: number) => {
-        setPage(newPage);
         setCurrentPage(newPage);
     };
-    const {
-        data: restaurantsData,
-        isLoading: isLoadingRestaurants,
-        isError: isRestaurantsError,
-        refetch: refetchRestaurants
-    } = useQuery({
-        queryKey: ['restaurants', searchQuery, searchLocation, selectedCuisines, selectedNeighborhoods, selectedFeatures, selectedPriceRanges, currentPage, pageSize],
-        queryFn: async () => {
-            // Build filter parameters based on the selected filters
-            const filters: any = {
-                page: currentPage,
-                size: pageSize,
-                sort: 'DESC',
-                sortCriteria: 'averageRating',
-            };
 
-            if (searchQuery) {
-                filters.address = searchQuery; // Using address field for general search
-            }
-            if (selectedNeighborhoods.length > 0 && searchLocation === '') {
-                filters.address = selectedNeighborhoods.join(',');
-            }
-            if (selectedCuisines.length > 0) {
-                filters.cuisineTypes = selectedCuisines.join(',');
-            }
-            if (searchLocation) {
-                filters.address = searchLocation;
-            }
-
-            if (selectedPriceRanges.length > 0) {
-                filters.priceRanges = selectedPriceRanges.join(',');
-
-            }
-
-            return fetchRestaurants(filters);
-        },
-        refetchOnWindowFocus: false
-    });
+    // Render restaurant grid or appropriate loading/error state
     const renderRestaurants = () => {
         if (isLoadingRestaurants) {
             return (
@@ -178,28 +183,33 @@ const Browse = () => {
             );
         }
 
-        if (!restaurantsData?.content?.length) {
+        // Check if data exists and has content
+        const restaurants = restaurantsData?.content || [];
+
+        if (restaurants.length === 0) {
             return (
                 <div className="text-center py-12">
                     <p className="text-lg text-gray-600 mb-4">No restaurants found matching your criteria.</p>
-                    {Object.values(filters).some(val => val !== '' && val !== 0) && (
-                        <Button variant="outline" onClick={handleClearFilters}>
-                            <FilterX className="mr-2 h-4 w-4"/>
-                            Clear Filters
-                        </Button>
-                    )}
+                    <Button variant="outline" onClick={handleClearFilters}>
+                        <FilterX className="mr-2 h-4 w-4"/>
+                        Clear Filters
+                    </Button>
                 </div>
             );
         }
 
         return (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {restaurantsData.content.map((restaurant: Restaurant) => (
+                {restaurants.map((restaurant: Restaurant) => (
                     <RestaurantCard key={restaurant.id} restaurant={restaurant}/>
                 ))}
             </div>
         );
     };
+
+    // Get pagination data from the response
+    const paginationInfo = restaurantsData?.page;
+    const totalPages = paginationInfo?.totalPages || 0;
 
     return (
         <div className="min-h-screen bg-gray-50">
@@ -218,10 +228,12 @@ const Browse = () => {
                 </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+                    {/* Sidebar/Filters */}
                     <div className="lg:col-span-1">
                         <div className="bg-white p-4 rounded-lg shadow-sm sticky top-4">
                             <h2 className="text-lg font-semibold mb-4">Filters</h2>
 
+                            {/* Desktop filters */}
                             <div className="hidden lg:block w-64 shrink-0">
                                 <FilterSection
                                     cuisines={cuisines}
@@ -239,7 +251,7 @@ const Browse = () => {
                                 />
                             </div>
 
-                            {/* Sidebar Filters - Mobile */}
+                            {/* Mobile filters */}
                             <div className="lg:hidden mb-4">
                                 <Sheet>
                                     <SheetTrigger asChild>
@@ -274,7 +286,13 @@ const Browse = () => {
                                 </Sheet>
                             </div>
 
-                            {Object.values(filters).some(val => val !== '' && val !== 0) && (
+                            {/* Clear filters button */}
+                            {(selectedCuisines.length > 0 ||
+                                selectedNeighborhoods.length > 0 ||
+                                selectedFeatures.length > 0 ||
+                                selectedPriceRanges.length > 0 ||
+                                searchQuery ||
+                                searchLocation) && (
                                 <Button
                                     variant="outline"
                                     size="sm"
@@ -288,23 +306,31 @@ const Browse = () => {
                         </div>
                     </div>
 
+                    {/* Main content */}
                     <div className="lg:col-span-3">
                         {renderRestaurants()}
 
-                        {restaurantsData?.page && (
+                        {/* Pagination */}
+                        {!isLoadingRestaurants && !isRestaurantsError && totalPages > 1 && (
                             <div className="mt-8 flex justify-center">
                                 <div className="flex space-x-2">
                                     <Button
                                         variant="outline"
-                                        disabled={page === 0}
-                                        onClick={() => handlePageChange(page - 1)}
+                                        disabled={currentPage === 1}
+                                        onClick={() => handlePageChange(currentPage - 1)}
                                     >
                                         Previous
                                     </Button>
+
+                                    {/* Optional: Show current page indicator */}
+                                    <span className="flex items-center px-4 text-gray-600">
+                                        Page {currentPage} of {totalPages}
+                                    </span>
+
                                     <Button
                                         variant="outline"
-                                        disabled={page >= restaurantsData.page.totalPages - 1}
-                                        onClick={() => handlePageChange(page + 1)}
+                                        disabled={currentPage >= totalPages}
+                                        onClick={() => handlePageChange(currentPage + 1)}
                                     >
                                         Next
                                     </Button>
