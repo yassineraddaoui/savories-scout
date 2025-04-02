@@ -2,7 +2,7 @@ import React from 'react';
 import {Accordion, AccordionContent, AccordionItem, AccordionTrigger} from "@/components/ui/accordion";
 import {Checkbox} from "@/components/ui/checkbox";
 import {Label} from "@/components/ui/label";
-import {Cuisine, Feature, Neighborhood, RangePrice} from '@/lib/types';
+import {Cuisine, Feature, Neighborhood, PriceRange} from '@/lib/types';
 
 interface FilterSectionProps {
     cuisines: Cuisine[];
@@ -11,15 +11,15 @@ interface FilterSectionProps {
     selectedCuisines: Cuisine[];
     selectedNeighborhoods: Neighborhood[];
     selectedFeatures: Feature[];
-    selectedRangePrices: RangePrice[];
+    selectedPriceRanges: PriceRange[];
     onCuisineChange: (cuisine: Cuisine) => void;
     onNeighborhoodChange: (neighborhood: Neighborhood) => void;
     onFeatureChange: (feature: Feature) => void;
-    onRangePriceChange: (priceRange: RangePrice) => void;
+    onPriceRangeChange: (priceRange: PriceRange) => void;
     className?: string;
 }
 
-const priceRanges: RangePrice[] = [1, 2, 3, 4]
+const priceRanges: PriceRange[] = [1, 2, 3, 4]
 
 const FilterSection: React.FC<FilterSectionProps> = ({
                                                          cuisines,
@@ -28,14 +28,14 @@ const FilterSection: React.FC<FilterSectionProps> = ({
                                                          selectedCuisines,
                                                          selectedNeighborhoods,
                                                          selectedFeatures,
-                                                         selectedRangePrices,
+                                                         selectedPriceRanges,
                                                          onCuisineChange,
                                                          onNeighborhoodChange,
                                                          onFeatureChange,
-                                                         onRangePriceChange,
+                                                         onPriceRangeChange,
                                                          className = '',
                                                      }) => {
-    const getPriceLabel = (priceRange: RangePrice): string => {
+    const getPriceLabel = (priceRange: PriceRange): string => {
         switch (priceRange) {
             case 1:
                 return '$ (Inexpensive)';
@@ -63,8 +63,8 @@ const FilterSection: React.FC<FilterSectionProps> = ({
                                 <div key={priceRange} className="flex items-center space-x-2">
                                     <Checkbox
                                         id={`price-${priceRange}`}
-                                        checked={selectedRangePrices.includes(priceRange)}
-                                        onCheckedChange={() => onRangePriceChange(priceRange)}
+                                        checked={selectedPriceRanges.includes(priceRange)}
+                                        onCheckedChange={() => onPriceRangeChange(priceRange)}
                                     />
                                     <Label
                                         htmlFor={`price-${priceRange}`}

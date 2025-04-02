@@ -39,7 +39,7 @@ export const fetchRestaurants = async (filters?: {
             throw new Error(`Error fetching restaurants: ${response.statusText}`);
         }
         const data = await response.json();
-        return data.content || []; // Assuming pagination response structure
+        return data || []; // Assuming pagination response structure
     } catch (error) {
         console.error("Failed to fetch restaurants:", error);
         throw error;

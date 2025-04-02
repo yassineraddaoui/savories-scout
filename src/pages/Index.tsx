@@ -4,7 +4,7 @@ import Navbar from '@/components/Navbar';
 import SearchBar from '@/components/SearchBar';
 import RestaurantCard from '@/components/RestaurantCard';
 import FilterSection from '@/components/FilterSection';
-import {Cuisine, Feature, Neighborhood, RangePrice, Restaurant} from '@/lib/types';
+import {Cuisine, Feature, Neighborhood, PriceRange, Restaurant} from '@/lib/types';
 import {Button} from "@/components/ui/button";
 import {Filter, Search} from 'lucide-react';
 import {Sheet, SheetClose, SheetContent, SheetTrigger} from "@/components/ui/sheet";
@@ -18,7 +18,7 @@ const Index = () => {
     const [selectedCuisines, setSelectedCuisines] = useState<Cuisine[]>([]);
     const [selectedNeighborhoods, setSelectedNeighborhoods] = useState<Neighborhood[]>([]);
     const [selectedFeatures, setSelectedFeatures] = useState<Feature[]>([]);
-    const [selectedRangePrices, setSelectedRangePrices] = useState<RangePrice[]>([]);
+    const [selectedPriceRanges, setSelectedPriceRanges] = useState<PriceRange[]>([]);
     const [currentPage, setCurrentPage] = useState(1);
     const [pageSize] = useState(12);
 
@@ -31,7 +31,7 @@ const Index = () => {
         isError: isRestaurantsError,
         refetch: refetchRestaurants
     } = useQuery({
-        queryKey: ['restaurants', searchQuery, searchLocation, selectedCuisines, selectedNeighborhoods, selectedFeatures, selectedRangePrices, currentPage, pageSize],
+        queryKey: ['restaurants', searchQuery, searchLocation, selectedCuisines, selectedNeighborhoods, selectedFeatures, selectedPriceRanges, currentPage, pageSize],
         queryFn: async () => {
             // Build filter parameters based on the selected filters
             const filters: any = {
@@ -54,8 +54,8 @@ const Index = () => {
                 filters.address = searchLocation;
             }
 
-            if (selectedRangePrices.length > 0) {
-                filters.priceRanges = selectedRangePrices.join(',');
+            if (selectedPriceRanges.length > 0) {
+                filters.priceRanges = selectedPriceRanges.join(',');
 
             }
 
@@ -118,8 +118,8 @@ const Index = () => {
         setCurrentPage(1);
     };
 
-    const handleRangePriceChange = (priceRange: RangePrice) => {
-        setSelectedRangePrices(prev =>
+    const handlePriceRangeChange = (priceRange: PriceRange) => {
+        setSelectedPriceRanges(prev =>
             prev.includes(priceRange)
                 ? prev.filter(p => p !== priceRange)
                 : [...prev, priceRange]
@@ -133,7 +133,7 @@ const Index = () => {
         setSelectedCuisines([]);
         setSelectedNeighborhoods([]);
         setSelectedFeatures([]);
-        setSelectedRangePrices([]);
+        setSelectedPriceRanges([]);
         setCurrentPage(1);
     };
 
@@ -190,11 +190,11 @@ const Index = () => {
                                 selectedCuisines={selectedCuisines}
                                 selectedNeighborhoods={selectedNeighborhoods}
                                 selectedFeatures={selectedFeatures}
-                                selectedRangePrices={selectedRangePrices}
+                                selectedPriceRanges={selectedPriceRanges}
                                 onCuisineChange={handleCuisineChange}
                                 onNeighborhoodChange={handleNeighborhoodChange}
                                 onFeatureChange={handleFeatureChange}
-                                onRangePriceChange={handleRangePriceChange}
+                                onPriceRangeChange={handlePriceRangeChange}
                                 className="sticky top-4"
                             />
                         </div>
@@ -219,11 +219,11 @@ const Index = () => {
                                         selectedCuisines={selectedCuisines}
                                         selectedNeighborhoods={selectedNeighborhoods}
                                         selectedFeatures={selectedFeatures}
-                                        selectedRangePrices={selectedRangePrices}
+                                        selectedPriceRanges={selectedPriceRanges}
                                         onCuisineChange={handleCuisineChange}
                                         onNeighborhoodChange={handleNeighborhoodChange}
                                         onFeatureChange={handleFeatureChange}
-                                        onRangePriceChange={handleRangePriceChange}
+                                        onPriceRangeChange={handlePriceRangeChange}
                                     />
                                     <SheetClose asChild>
                                         <Button className="mt-4 w-full bg-food-500 hover:bg-food-600">

@@ -6,7 +6,7 @@ export interface Restaurant {
     id: string;
     name: string;
     cuisine: string;
-    rangePrice: 1 | 2 | 3| 4;
+    priceRange: 1 | 2 | 3| 4;
     averageRating: number;
     reviewCount: number;
     address: {
@@ -62,7 +62,7 @@ export interface PaginatedResponse<T> {
     };
 }
 
-export type RangePrice = Restaurant["rangePrice"];
+export type PriceRange = Restaurant["priceRange"];
 export type Cuisine = string;
 export type Feature = string;
 export type Neighborhood = string;
