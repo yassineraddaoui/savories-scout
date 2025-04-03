@@ -28,7 +28,7 @@ export interface Restaurant {
     };
     contactInformation: string;
     website?: string;
-    reviews:Review[]
+    reviews: Review[]
 }
 
 export interface Review {
@@ -60,6 +60,11 @@ export interface PaginatedResponse<T> {
         totalElements: number;
         totalPages: number;
     };
+}
+
+export interface ReviewRestaurant {
+    review: Review,
+    restaurant: Restaurant
 }
 
 export type PriceRange = Restaurant["priceRange"];

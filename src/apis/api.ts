@@ -1,4 +1,4 @@
-import {PaginatedResponse, Restaurant, Review} from "@/lib/types.ts";
+import {PaginatedResponse, Restaurant, Review, ReviewRestaurant} from "@/lib/types.ts";
 import {getAuthHeader, isAuthenticated} from "@/auth/keycloak";
 
 const API_BASE_URL = "http://localhost:8080/api";
@@ -72,7 +72,7 @@ export const submitReview = async (
             ...getAuthHeader(),
             "Content-Type": "application/json",
         };
-        
+
         // Determine the correct endpoint based on authentication status
         let reviewAddApi = `${API_BASE_URL}/restaurants/${restaurantId}/reviews`;
         if (isAuthenticated()) {
@@ -147,6 +147,6 @@ export const removeFavorite = async (restaurantId: string): Promise<ApiResponse<
     }
 };
 
-export const getUserReviews = async (): Promise<ApiResponse<PaginatedResponse<Review>>> => {
-    return fetchApi<PaginatedResponse<Review>>("/user/reviews");
+export const getUserReviews = async (): Promise<ApiResponse<ReviewRestaurant[]>> => {
+    return fetchApi<ReviewRestaurant[]>("/user/reviews");
 };
