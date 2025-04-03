@@ -56,7 +56,7 @@ export function useRestaurants() {
       };
 
       if (searchQuery) {
-        filters.address = searchQuery;
+        filters.name = searchQuery;
       }
 
       if (selectedNeighborhoods.length > 0 && searchLocation === '') {
