@@ -127,10 +127,7 @@ export const addFavorite = async (restaurantId: string): Promise<ApiResponse<boo
 
 export const removeFavorite = async (restaurantId: string): Promise<ApiResponse<boolean>> => {
     try {
-        const headers = {
-            ...getAuthHeader(),
-            'Content-Type': 'application/json'
-        };
+        const headers = getAuthHeader();
 
         const response = await fetch(`${API_BASE_URL}/user/favorites/${restaurantId}`, {
             method: 'DELETE',
@@ -138,12 +135,13 @@ export const removeFavorite = async (restaurantId: string): Promise<ApiResponse<
         });
 
         if (!response.ok) {
-            return {error: `HTTP error! status: ${response.status}`};
+            const errorText = await response.text();
+            return { error: `Error ${response.status}: ${errorText}` };
         }
 
-        return {data: true};
+        return { data: true };
     } catch (error) {
-        return {error: error instanceof Error ? error.message : "Unknown error"};
+        return { error: error instanceof Error ? error.message : "Unknown error" };
     }
 };
 

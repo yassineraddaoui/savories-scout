@@ -10,6 +10,7 @@ import {useToast} from "@/components/ui/use-toast";
 import {Button} from "@/components/ui/button";
 import {ArrowLeft, FileEdit, Globe, Heart, Loader, MapPin, Phone, Share2} from 'lucide-react';
 import {Tabs, TabsContent, TabsList, TabsTrigger} from "@/components/ui/tabs";
+import {addFavorite} from "@/apis/api.ts";
 
 const RestaurantDetail = () => {
     const {id} = useParams<{ id: string }>();
@@ -39,7 +40,8 @@ const RestaurantDetail = () => {
         enabled: !!id
     });
 
-    const handleBookmark = () => {
+    const handleBookmark = async () => {
+        await addFavorite(id);
         toast({
             title: "Restaurant Saved",
             description: `${restaurant?.name} has been added to your favorites`,
