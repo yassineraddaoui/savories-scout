@@ -5,7 +5,6 @@ import {toast} from "@/components/ui/use-toast";
 const KEYCLOAK_URL = "http://localhost:9090";
 const KEYCLOAK_REALM = "restaurant-review";
 const KEYCLOAK_CLIENT_ID = "restaurant-review";
-const CLIENT_SECRET = "SVhY7A7ctZpwP0FBom8DyUsl0DM17Q1h";
 interface KeycloakToken {
   token: string;
   refreshToken: string;
@@ -98,7 +97,6 @@ export const login = async (username: string, password: string): Promise<Keycloa
       body: new URLSearchParams({
         client_id: 'restaurant-review',
         grant_type: 'password',
-        client_secret:CLIENT_SECRET,
         username,
         password
       }),
