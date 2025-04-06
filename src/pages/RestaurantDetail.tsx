@@ -234,18 +234,20 @@ const RestaurantDetail = () => {
                                     <h2 className="text-xl font-semibold mb-4">About {restaurant.name}</h2>
                                     <p className="text-gray-700 mb-6">{restaurant.description}</p>
 
-                                    <h3 className="text-lg font-medium mb-3">Features</h3>
+
                                     {restaurant.features?.length > 0 && (
-                                        <div className="flex flex-wrap gap-2 mb-6">
-                                            {restaurant.features.map((feature) => (
-                                                <span
-                                                    key={feature}
-                                                    className="inline-block px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm"
-                                                >
-                {feature}
-            </span>
-                                            ))}
-                                        </div>
+                                        <><h3 className="text-lg font-medium mb-3">Features</h3>
+                                            <div className="flex flex-wrap gap-2 mb-6">
+                                                {restaurant.features.map((feature) => (
+                                                    <span
+                                                        key={feature}
+                                                        className="inline-block px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm"
+                                                    >
+                                                    {feature}
+                                                </span>
+                                                ))}
+                                            </div>
+                                        </>
                                     )}
 
 
