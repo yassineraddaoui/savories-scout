@@ -141,7 +141,7 @@ const Index = () => {
                 <div className="container px-4">
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                         <div>
-                            <h3 className="text-xl font-semibold mb-4">Savories Scout</h3>
+                            <h3 className="text-xl font-semibold mb-4">TableTalk</h3>
                             <p className="text-gray-400">
                                 Connecting food lovers with authentic local dining experiences.
                             </p>
@@ -158,7 +158,7 @@ const Index = () => {
                         <div>
                             <h4 className="text-lg font-medium mb-4">Contact Us</h4>
                             <p className="text-gray-400 mb-2">
-                                info@savoriesscout.com
+                                info@TableTalk.com
                             </p>
                             <p className="text-gray-400">
                                 123 Foodie Ave, Flavor Town
@@ -166,7 +166,7 @@ const Index = () => {
                         </div>
                     </div>
                     <div className="border-t border-gray-800 mt-8 pt-8 text-center text-gray-500">
-                        <p>&copy; {new Date().getFullYear()} Savories Scout. All rights reserved.</p>
+                        <p>&copy; {new Date().getFullYear()} TableTalk . All rights reserved.</p>
                     </div>
                 </div>
             </footer>

@@ -10,7 +10,7 @@ const About = () => {
       
       <div className="bg-food-500 text-white py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h1 className="text-4xl font-bold mb-4">About Savories Scout</h1>
+          <h1 className="text-4xl font-bold mb-4">About TableTalk </h1>
           <p className="text-xl max-w-3xl">
             Connecting food lovers with authentic local dining experiences since 2023.
           </p>
@@ -22,7 +22,7 @@ const About = () => {
           <div>
             <h2 className="text-3xl font-bold mb-6 text-gray-900">Our Mission</h2>
             <p className="text-lg text-gray-700 mb-6">
-              At Savories Scout, we believe that great food is at the heart of every community. Our mission is to help people discover authentic dining experiences by connecting them with local restaurants that serve exceptional cuisine.
+              At TableTalk, we believe that great food is at the heart of every community. Our mission is to help people discover authentic dining experiences by connecting them with local restaurants that serve exceptional cuisine.
             </p>
             <p className="text-lg text-gray-700">
               We're passionate about supporting local businesses and helping food lovers find their next favorite spot, whether it's a hidden gem tucked away in a neighborhood or a popular establishment with a loyal following.
@@ -76,7 +76,7 @@ const About = () => {
           <h2 className="text-3xl font-bold mb-8 text-center text-gray-900">Our Story</h2>
           <div className="bg-white p-8 rounded-lg shadow-sm">
             <p className="text-lg text-gray-700 mb-6">
-              Savories Scout was founded by a group of food enthusiasts who were tired of sifting through endless restaurant options without reliable guidance. We started in a small apartment, mapping out our favorite local eateries and sharing recommendations with friends.
+            TableTalk was founded by a group of food enthusiasts who were tired of sifting through endless restaurant options without reliable guidance. We started in a small apartment, mapping out our favorite local eateries and sharing recommendations with friends.
             </p>
             <p className="text-lg text-gray-700 mb-6">
               What began as a passion project quickly grew into a comprehensive platform as more people sought authentic dining experiences. Today, we're proud to help thousands of users discover exceptional restaurants in their communities.
@@ -137,7 +137,7 @@ const About = () => {
         <div className="max-w-7xl mx-auto px-4">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <div>
-              <h3 className="text-xl font-semibold mb-4">Savories Scout</h3>
+              <h3 className="text-xl font-semibold mb-4">TableTalk </h3>
               <p className="text-gray-400">
                 Connecting food lovers with authentic local dining experiences.
               </p>
@@ -153,7 +153,7 @@ const About = () => {
             <div>
               <h4 className="text-lg font-medium mb-4">Contact Us</h4>
               <p className="text-gray-400 mb-2">
-                info@savoriesscout.com
+                info@TableTalk.com
               </p>
               <p className="text-gray-400">
                 123 Foodie Ave, Flavor Town
@@ -161,7 +161,7 @@ const About = () => {
             </div>
           </div>
           <div className="border-t border-gray-800 mt-8 pt-8 text-center text-gray-500">
-            <p>&copy; {new Date().getFullYear()} Savories Scout. All rights reserved.</p>
+            <p>&copy; {new Date().getFullYear()} TableTalk . All rights reserved.</p>
           </div>
         </div>
       </div>

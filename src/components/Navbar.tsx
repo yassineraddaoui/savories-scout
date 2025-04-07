@@ -46,8 +46,8 @@ const Navbar = () => {
           <div className="flex">
             <div className="flex-shrink-0 flex items-center">
               <Link to="/" className="flex items-center">
-                <span className="text-food-500 font-bold text-2xl">Savories</span>
-                <span className="text-gray-700 font-bold text-2xl">Scout</span>
+                <span className="text-food-500 font-bold text-2xl">Table</span>
+                <span className="text-gray-700 font-bold text-2xl">Talk</span>
               </Link>
             </div>
             <div className="hidden sm:ml-6 sm:flex sm:space-x-8">
